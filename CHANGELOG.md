@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-06-06
+
+### Added
+- Edge TTS 引擎（微软免费在线 TTS），支持 SSML 情感风格（cheerful/sad/angry/calm/excited）
+- 数百种音色可选，无需 API Key
+- 9 个 Edge TTS 测试用例，未安装 edge-tts 时自动跳过
+- `pretest` 脚本，npm test 前自动构建
+- `.nvmrc` 锁定 Node 24 版本
+- README 新增引擎对比表、引擎选择建议、Edge TTS 使用指南
+
 ## [1.0.2] - 2026-05-21
 
 ### Fixed
