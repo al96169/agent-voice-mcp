@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-05-21
+
+### Fixed
+- 云端/Piper 引擎音频播放改为跨平台适配（macOS afplay / Windows PowerShell SAPI / Linux aplay）
+
+## [1.0.1] - 2026-05-21
+
+### Changed
+- 版本号升至 1.0.1，修正版本发布流程
+
+## [1.0.0] - 2026-05-21
+
+### Changed
+- 正式发布 v1.0.0 稳定版
+- README 新增 npx 一键安装配置方式
+- README 新增本地项目文件运行配置方式
+- README 新增第 4 点"强制规则"，确保 Agent 使用语音播报
+- Node.js 版本要求统一为 >= 18
+
 ## [0.0.5] - 2024-05-21
 
 ### Added

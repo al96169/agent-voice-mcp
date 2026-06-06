@@ -11,9 +11,9 @@
     "build": "tsc && node scripts/postbuild.mjs",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
-    "test": "node --import tsx --test --test-concurrency=1 tests/cloud.test.ts tests/index.test.ts tests/piper.test.ts",
-    "debug": "node --import tsx scripts/debug.ts",
-    "debug-cloud": "node --import tsx scripts/debug-cloud.ts",
+    "test": "tsx --test --test-concurrency=1 tests/cloud.test.ts tests/index.test.ts tests/piper.test.ts",
+    "debug": "tsx scripts/debug.ts",
+    "debug-cloud": "tsx scripts/debug-cloud.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -29,12 +29,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AntoniotheFuture/agent-voice-mcp.git"
+    "url": "git+https://github.com/al96169/agent-voice-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/AntoniotheFuture/agent-voice-mcp/issues"
+    "url": "https://github.com/al96169/agent-voice-mcp/issues"
   },
-  "homepage": "https://github.com/AntoniotheFuture/agent-voice-mcp#readme",
+  "homepage": "https://github.com/al96169/agent-voice-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },

@@ -22,7 +22,7 @@ npm install -g agent-voice-mcp
 **方式二：手动安装**
 
 ```bash
-git clone https://github.com/AntoniotheFuture/agent-voice-mcp.git
+git clone https://github.com/al96169/agent-voice-mcp.git
 cd agent-voice
 npm install
 npm run build
@@ -179,7 +179,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 {
   "voice": "Tingting",
   "rate": 200,
-  "volume": 0.8,
+  "volume": 1.0,
   "scenes": {
     "task_start": {
       "voice": "Tingting",
@@ -190,7 +190,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
     "task_complete": {
       "voice": "Tingting",
       "rate": 220,
-      "volume": 0.9,
+      "volume": 1.0,
       "emotion": "happy"
     },
     "task_error": {
@@ -207,7 +207,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
     "milestone": {
       "voice": "Tingting",
       "rate": 220,
-      "volume": 0.9,
+      "volume": 1.0,
       "emotion": "happy"
     }
   }
@@ -218,10 +218,13 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 | 字段 | 说明 | 默认值 |
 |------|------|--------|
-| `engine` | TTS 引擎：`piper` / `cloud` | `piper` |
-| `voice` | 默认音色 | `Tingting` |
+| `engine` | TTS 引擎：`piper` / `cloud` / `say`；不填则根据平台自动选择 | 自动检测 |
+| `voice` | 默认音色 | 无（使用引擎默认音色） |
 | `rate` | 语速 50-300 | `200` |
-| `volume` | 音量 0-1 | `0.8` |
+| `volume` | 音量 0-1 | `1.0` |
+| `modelPath` | Piper 模型目录路径 | `models/piper/` |
+| `configPath` | Piper 配置文件路径 | `models/piper/piper.json` |
+| `cloud` | 云端引擎配置（engine 为 cloud 时必填） | - |
 | `scenes` | 各场景独立配置 | - |
 
 ---
@@ -230,11 +233,14 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 ### 本地引擎
 
+不指定 `engine` 时，服务会根据当前操作系统**自动选择**合适的本地 TTS 引擎：
+
 | 引擎 | 平台 | 说明 |
 |------|------|------|
-| `piper` | macOS / Windows / Linux | 跨平台神经网络 TTS，支持多语言 |
-| `say` | macOS 专用 | 系统内置音色，无需安装 |
-| `edge` | 全部平台 | Edge TTS，API 调用需网络 |
+| `piper` | macOS / Windows / Linux | 跨平台神经网络 TTS，支持多语言（需手动下载模型） |
+| `say` | macOS（自动选择） | 系统内置 `say` 命令，无需安装 |
+| `sapi` | Windows（自动选择） | 系统内置 SAPI 语音，通过 PowerShell 调用 |
+| `espeak` | Linux（自动选择） | espeak-ng 开源 TTS 引擎，需手动安装 |
 
 ### 云端引擎
 
@@ -351,18 +357,86 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 ### Piper 音色（跨平台，推荐）
 
+Piper 是开源跨平台神经网络 TTS 引擎，发音自然、支持多语言。使用前需完成以下步骤：
+
+#### 1. 安装 Piper
+
+```bash
+# macOS
+brew install piper
+
+# Linux (Ubuntu/Debian)
+sudo apt install piper  # 或从 https://github.com/rhasspy/piper/releases 下载二进制
+
+# Linux 也可通过 pip 安装
+pip install piper-tts --break-system-packages
+
+# Windows
+# 从 https://github.com/rhasspy/piper/releases 下载 piper.exe 并加入 PATH
+```
+
+#### 2. 下载模型
+
+从 [Piper 模型库](https://huggingface.co/rhasspy/piper-voices) 下载 `.onnx` 模型文件和对应的 `.onnx.json` 配置文件，放入 `~/.agent-voice/models/` 目录：
+
+```bash
+mkdir -p ~/.agent-voice/models
+
+# 中文女声示例
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx \
+  -O ~/.agent-voice/models/zh_CN-huayan-medium.onnx
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx.json \
+  -O ~/.agent-voice/models/zh_CN-huayan-medium.onnx.json
+```
+
+> 如无法访问 HuggingFace，可使用镜像 `hf-mirror.com` 替代。
+
+#### 3. 配置
+
+```json
+{
+  "engine": "piper",
+  "modelPath": "~/.agent-voice/models/zh_CN-huayan-medium.onnx",
+  "configPath": "~/.agent-voice/models/piper.json",
+  "voice": "zh_CN-huayan-medium",
+  "rate": 200
+}
+```
+
+#### 4. 验证安装
+
+安装完成后运行以下命令测试 Piper 引擎：
+
+```bash
+# 验证 piper 命令可用
+which piper && echo "✓ Piper 已安装"
+
+# 验证模型存在
+ls ~/.agent-voice/models/*.onnx && echo "✓ 模型已就绪"
+
+# 运行 Piper 专用测试
+npm run test -- tests/piper.test.ts
+
+# 或一键语音播报测试
+npm run debug
+```
+
+#### 可用音色
+
 | 语言 | 音色 | 说明 |
 |------|------|------|
+| 🇨🇳 中文 | zh_CN-huayan-medium | 中文女声（花颜） |
 | 🇨🇳 中文 | ZXH | 中文男声 |
 | 🇨🇳 中文 | ZhVits | 中文女声 |
-| 🇺🇸 英文 | en_US-lessac-medium | 英式英语女声 |
-| 🇺🇸 英文 | en_US-lessac-lcast | 美式英语女声 |
+| 🇺🇸 英文 | en_US-lessac-medium | 美式英语女声 |
+| 🇺🇸 英文 | en_US-lessac-low | 美式英语女声（轻量） |
+| 🇬🇧 英文 | en_GB-alan-medium | 英式英语男声 |
 
-下载模型后放在 `models/piper/` 目录，配置 `voice: "模型文件名"` 即可使用。
+> 完整模型列表见 [Piper Voices](https://huggingface.co/rhasspy/piper-voices)。`modelPath` 和 `configPath` 支持 `~` 路径别名。
 
 ### macOS say 音色
 
-通过 `npm run voices:mac` 可列出系统所有可用音色，部分音色：
+可通过 MCP 工具 `get_voices` 查看系统所有可用音色，部分音色：
 
 | 语言 | 音色 | 说明 |
 |------|------|------|
@@ -391,9 +465,10 @@ mcp__agent-voice__speak(
   text: string,       // 播报文本，控制在 50 字以内
   scene?: "task_start" | "task_complete" | "task_error" | "need_interaction" | "milestone",
   emotion?: "neutral" | "happy" | "sad" | "angry" | "calm" | "excited",
+  emotionIntensity?: number,  // 情感强度 0-1，默认 1.0
   voice?: string,      // 覆盖默认音色
-  rate?: number,      // 覆盖默认语速
-  volume?: number     // 覆盖默认音量
+  rate?: number,      // 覆盖默认语速 50-300
+  volume?: number     // 覆盖默认音量 0-1
 )
 ```
 
@@ -417,7 +492,15 @@ mcp__agent-voice__get_voices() => string[]
 
 ## 调试
 
-### 本地云端 TTS 调试
+### 本地 TTS 调试
+
+```bash
+npm run debug
+```
+
+使用当前平台本地引擎播报测试文本。
+
+### 云端 TTS 调试
 
 ```bash
 npm run debug-cloud
@@ -425,12 +508,35 @@ npm run debug-cloud
 
 读取 `~/.agent-voice/debug-cloud.json` 配置，直连云端 API 并播放音频，用于排查云端合成问题。
 
-### 音色预览
+---
+
+## 测试
 
 ```bash
-npm run voices:mac       # macOS say 音色
-npm run voices:piper     # Piper 音色
+npm test    # 运行全部 33 个测试用例（顺序执行，避免音频同时播放）
 ```
+
+### 前置准备
+
+| 测试套件 | 前置条件 | 缺失时行为 |
+|----------|----------|------------|
+| 本地 TTS（index.test.ts） | macOS/Windows 无需准备；Linux 需 `espeak-ng` | 语音相关测试自动跳过 |
+| Piper（piper.test.ts） | `piper` 二进制 + `~/.agent-voice/models/` 下的 `.onnx` 模型文件 | 播放测试自动跳过 |
+| 云端（cloud.test.ts） | `~/.agent-voice/debug-cloud.json` 凭证文件 | 凭证测试自动跳过 |
+
+> 测试设计为**渐进式覆盖**：本地环境有什么就测什么，不会因为缺少可选依赖而失败。
+
+### 运行单个套件
+
+```bash
+npx tsx --test tests/index.test.ts    # 本地 TTS + 配置 + 队列 + 情感
+npx tsx --test tests/piper.test.ts    # Piper 引擎
+npx tsx --test tests/cloud.test.ts    # 云端 Provider
+```
+
+### Linux CI 额外依赖
+
+CI 中已自动安装 `espeak-ng`，其余两项（piper 模型、云端凭证）因安全原因不在 CI 中提供，对应测试会安全跳过。
 
 ---
 
@@ -439,27 +545,36 @@ npm run voices:piper     # Piper 音色
 ```
 agent-voice/
 ├── src/
-│   ├── index.ts           # MCP Server 入口 (stdio 传输)
-│   ├── config.ts          # 配置加载与 ${ENV_VAR} 插值
-│   ├── voice-queue.ts    # 播报队列（防重复、防打断）
+│   ├── index.ts              # MCP Server 入口 (stdio 传输)
+│   ├── config.ts             # 配置加载与 ${ENV_VAR} 插值
+│   ├── voice-queue.ts        # 播报队列（防重复、防打断）
 │   └── tts/
-│       ├── factory.ts          # TTS 引擎工厂
-│       ├── interface.ts        # TTS 引擎接口
-│       ├── piper-tts.ts        # Piper 跨平台引擎
-│       ├── say-mac.ts          # macOS say 引擎
-│       ├── edge-tts.ts         # Edge TTS 引擎
+│       ├── factory.ts        # TTS 引擎工厂
+│       ├── interface.ts      # TTS 引擎接口
+│       ├── audio-player.ts   # 跨平台音频播放器
+│       ├── macos-say.ts      # macOS say 引擎
+│       ├── windows-sapi.ts   # Windows SAPI 引擎
+│       ├── linux-espeak.ts   # Linux espeak-ng 引擎
+│       ├── piper-tts.ts      # Piper 跨平台神经网络引擎
 │       └── cloud/
-│           ├── engine.ts        # 云端 TTS 引擎
-│           ├── types.ts        # 云端类型定义
+│           ├── engine.ts     # 云端 TTS 引擎
+│           ├── types.ts      # 云端类型定义
 │           └── providers/
-│               ├── openai.ts    # OpenAI 兼容 Bearer Token
-│               ├── volcano.ts   # 火山引擎 Bearer Token
-│               └── custom.ts    # 通用 HTTP 模板
-├── .trae/
-│   ├── mcp.json           # Trae MCP 配置
-│   └── skills/agent-voice/SKILL.md  # Skill 行为约定
-├── models/piper/          # Piper 模型目录
-└── tests/                 # 测试套件
+│               ├── openai.ts  # OpenAI 兼容 Provider
+│               ├── volcano.ts # 火山引擎 Provider
+│               └── custom.ts  # 通用 HTTP 模板 Provider
+├── scripts/
+│   ├── postbuild.mjs         # 构建后注入 shebang
+│   ├── debug.ts              # 本地 TTS 调试脚本
+│   ├── debug-cloud.ts        # 云端 TTS 调试脚本
+│   └── quick-start.sh        # 快速启动脚本
+├── tests/                    # 测试套件（33 个测试用例）
+│   ├── index.test.ts         # 引擎/队列/配置/情感 综合测试
+│   ├── cloud.test.ts         # 云端 Provider 测试
+│   └── piper.test.ts         # Piper 引擎测试
+├── dist/                     # TypeScript 编译产物
+├── package.json
+└── tsconfig.json
 ```
 
 ---
@@ -467,9 +582,10 @@ agent-voice/
 ## 常见问题
 
 ### Q: 重启后语音没触发？
-1. `.trae/mcp.json` 配置正确，MCP 服务已连接
-2. Skill 文件 `.trae/skills/agent-voice/SKILL.md` 存在且格式正确
-3. 重启客户端后等待几秒让 MCP 服务初始化
+1. 确认 MCP 客户端配置正确，MCP 服务已连接
+2. Skill 文件 `.trae/skills/agent-voice/SKILL.md`（或其他 Agent 对应位置）存在且格式正确
+3. 确认已在规则/提示词中强制 Agent 调用 agent-voice 工具
+4. 重启客户端后等待几秒让 MCP 服务初始化
 
 ### Q: 火山引擎报 403 错误？
 检查 `voice` 和 `cluster` 是否匹配，可参考上表中的推荐搭配，不同集群支持的音色不同。
@@ -487,15 +603,37 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 
 ## 更新日志
 
+### v1.0.2
+- 当前稳定版本
+- 支持 macOS / Windows / Linux 三平台本地 TTS 引擎
+- 支持 Piper 跨平台神经网络 TTS 引擎
+- 支持云端 TTS 引擎（OpenAI、火山引擎、Custom HTTP）
+- 5 个 Agent 生命周期场景（task_start / task_complete / task_error / need_interaction / milestone）
+- 6 种情感类型 + emotionIntensity 强度控制
+- VoiceQueue 防抖队列机制
+- `${ENV_VAR}` 环境变量配置插值
+- CI/CD 自动化构建与发布流水线
+- 完整测试套件（33 个测试用例）
+
+### v0.0.5
+- 完善打包流程，支持 npm 包发布
+- GitHub Actions CI/CD 流水线，自动化构建和测试
+
 ### v0.0.4
 - **解绑 Trae**：构建通用 MCP TTS 服务，支持所有 MCP 客户端
 - 新增云端 TTS 引擎，支持 OpenAI、火山引擎、Custom HTTP 三种类型
-- Piper 引擎提升为跨平台通用选项（`engine: "piper"` 所有平台均可用）
-- MCP 启动时自动播报"agent-voice 服务已启动"提示语
-- 新增 `debug-cloud` 一键调试脚本
-- 新增 `voice-queue` 防重复播报机制
-- 新增环境变量 `${ENV_VAR}` 配置插值支持
-- 新增情绪（emotion）参数，对应场景情绪音色
-- MCP Server 基础框架，stdio 传输
-- speak / stop / get_voices 三个 MCP 工具
-- 完整测试套件（33 个测试用例）
+- Piper 引擎提升为跨平台通用选项
+- VoiceQueue 防重复播报机制
+- 环境变量 `${ENV_VAR}` 配置插值
+- 情绪（emotion）参数支持
+
+### v0.0.3
+- 支持切换本地 TTS 不同音色
+- 情感参数配置
+
+### v0.0.2
+- 支持配置 TTS 语速、音量和播报场景
+
+### v0.0.1
+- MVP 版本，实现基本 TTS 语音播报功能
+- 支持 macOS 本地 say 命令
