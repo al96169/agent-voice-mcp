@@ -10,6 +10,8 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
