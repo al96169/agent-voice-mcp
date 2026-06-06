@@ -1,4 +1,4 @@
-# agent-voice v1.0.2
+# agent-voice v1.0.3
 
 为 AI Agent 提供 TTS 语音播报能力的通用 MCP 服务。在 Agent 的任务生命周期、关键节点、交互式询问时自动通过 TTS 语音提醒用户。适用于 Trae、Claude Desktop、Cursor、WindSurf 等所有支持 MCP 的 Agent。
 
@@ -218,7 +218,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 | 字段 | 说明 | 默认值 |
 |------|------|--------|
-| `engine` | TTS 引擎：`piper` / `cloud` / `say`；不填则根据平台自动选择 | 自动检测 |
+| `engine` | TTS 引擎：`say` / `piper` / `edge-tts` / `cloud`；不填则根据平台自动选择 | 自动检测 |
 | `voice` | 默认音色 | 无（使用引擎默认音色） |
 | `rate` | 语速 50-300 | `200` |
 | `volume` | 音量 0-1 | `1.0` |
@@ -237,10 +237,11 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 | 引擎 | 平台 | 说明 |
 |------|------|------|
-| `piper` | macOS / Windows / Linux | 跨平台神经网络 TTS，支持多语言（需手动下载模型） |
 | `say` | macOS（自动选择） | 系统内置 `say` 命令，无需安装 |
 | `sapi` | Windows（自动选择） | 系统内置 SAPI 语音，通过 PowerShell 调用 |
 | `espeak` | Linux（自动选择） | espeak-ng 开源 TTS 引擎，需手动安装 |
+| `piper` | macOS / Windows / Linux | 跨平台神经网络 TTS，支持多语言（需手动下载模型） |
+| `edge-tts` | macOS / Windows / Linux | 微软 Edge 免费在线 TTS，发音极其自然（需安装 Python `edge-tts` 包） |
 
 ### 云端引擎
 
@@ -353,6 +354,28 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 ---
 
+## 引擎对比
+
+| 引擎 | 优点 | 缺点 |
+|------|------|------|
+| **macOS say** | 系统内置，零安装；多语言多音色；响应快（<1s） | 仅限 macOS；声音较机械；不支持情感 SSML |
+| **Windows SAPI** | 系统内置，零安装；多语言多音色 | 仅限 Windows；声音较机械；不支持情感 SSML |
+| **Linux espeak-ng** | 轻量、低资源消耗；跨 Linux 发行版 | 需手动安装；声音非常机械（适合调试用）；不支持情感 SSML |
+| **Piper** | 跨平台；神经网络合成，发音自然；支持多语言；离线可用 | 需下载 ONNX 模型文件（~50MB/个）；需安装 piper 二进制；不支持情感 SSML |
+| **Edge TTS** | 微软免费在线服务；发音极其自然；支持 SSML 情感风格；数百种音色可选；无需 API Key | 需安装 Python + `edge-tts` 包；需联网；情感 SSML 合成较慢（~40-50s） |
+| **Cloud OpenAI** | 发音自然；支持多音色 | 需 API Key（付费）；需联网；有调用频率限制 |
+| **Cloud 火山引擎** | 豆包语音，中文发音优秀；情感/风格丰富 | 需 AppID + Token（付费）；需联网 |
+| **Cloud Custom HTTP** | 适配任意 HTTP API，灵活度最高 | 需自行处理认证和响应解析 |
+
+### 引擎选择建议
+
+- **快速上手**：macOS 用 `say`，Windows 用 `SAPI`，零配置即刻可用
+- **离线高质量**：`Piper`，下载一次模型后永久离线使用
+- **最佳音质（免费）**：`Edge TTS`，微软免费在线引擎，发音极其自然
+- **生产环境**：`Cloud OpenAI` 或 `Cloud 火山引擎`，稳定可靠
+
+---
+
 ## 本地音色
 
 ### Piper 音色（跨平台，推荐）
@@ -452,6 +475,52 @@ npm run debug
 
 完整音色列表可通过 `get_voices` 工具获取。
 
+### Edge TTS 音色（跨平台在线引擎）
+
+Edge TTS 使用微软免费的在线语音合成服务，发音极其自然，支持数百种音色和 SSML 情感风格。
+
+#### 安装
+
+```bash
+pip install edge-tts
+```
+
+#### 配置
+
+```json
+{
+  "engine": "edge-tts",
+  "voice": "zh-CN-XiaoxiaoNeural",
+  "rate": 200,
+  "volume": 1.0
+}
+```
+
+#### 验证安装
+
+```bash
+# 验证 edge-tts 命令可用
+which edge-tts && echo "✓ Edge TTS 已安装"
+
+# 运行 Edge TTS 专用测试
+npx tsx --test tests/edge-tts.test.ts
+```
+
+#### 常用中文音色
+
+| 音色 | 说明 |
+|------|------|
+| `zh-CN-XiaoxiaoNeural` | 中文女声（自然） |
+| `zh-CN-XiaoyiNeural` | 中文女声（活泼） |
+| `zh-CN-YunxiNeural` | 中文男声（自然） |
+| `zh-CN-YunjianNeural` | 中文男声（稳重） |
+| `zh-CN-YunyangNeural` | 中文男声（新闻播报） |
+| `zh-CN-YunfengNeural` | 中文男声（成熟） |
+| `zh-CN-XiaochenNeural` | 中文女声（温柔） |
+| `zh-CN-XiaohanNeural` | 中文女声（可爱） |
+
+> 完整音色列表通过 `get_voices` 工具获取（约 300+ 种音色）。Edge TTS 支持 SSML 情感风格：cheerful、sad、angry、calm、excited，由引擎自动映射。
+
 ---
 
 ## MCP 工具 API 参考
@@ -513,7 +582,7 @@ npm run debug-cloud
 ## 测试
 
 ```bash
-npm test    # 运行全部 33 个测试用例（顺序执行，避免音频同时播放）
+npm test    # 运行全部 42 个测试用例（顺序执行，避免音频同时播放）
 ```
 
 ### 前置准备
@@ -522,6 +591,7 @@ npm test    # 运行全部 33 个测试用例（顺序执行，避免音频同�
 |----------|----------|------------|
 | 本地 TTS（index.test.ts） | macOS/Windows 无需准备；Linux 需 `espeak-ng` | 语音相关测试自动跳过 |
 | Piper（piper.test.ts） | `piper` 二进制 + `~/.agent-voice/models/` 下的 `.onnx` 模型文件 | 播放测试自动跳过 |
+| Edge TTS（edge-tts.test.ts） | Python `edge-tts` 包（`pip install edge-tts`） | 全部测试自动跳过 |
 | 云端（cloud.test.ts） | `~/.agent-voice/debug-cloud.json` 凭证文件 | 凭证测试自动跳过 |
 
 > 测试设计为**渐进式覆盖**：本地环境有什么就测什么，不会因为缺少可选依赖而失败。
@@ -532,6 +602,7 @@ npm test    # 运行全部 33 个测试用例（顺序执行，避免音频同�
 npx tsx --test tests/index.test.ts    # 本地 TTS + 配置 + 队列 + 情感
 npx tsx --test tests/piper.test.ts    # Piper 引擎
 npx tsx --test tests/cloud.test.ts    # 云端 Provider
+npx tsx --test tests/edge-tts.test.ts # Edge TTS 引擎
 ```
 
 ### Linux CI 额外依赖
@@ -556,6 +627,7 @@ agent-voice/
 │       ├── windows-sapi.ts   # Windows SAPI 引擎
 │       ├── linux-espeak.ts   # Linux espeak-ng 引擎
 │       ├── piper-tts.ts      # Piper 跨平台神经网络引擎
+│       ├── edge-tts.ts       # Edge TTS 引擎
 │       └── cloud/
 │           ├── engine.ts     # 云端 TTS 引擎
 │           ├── types.ts      # 云端类型定义
@@ -568,10 +640,11 @@ agent-voice/
 │   ├── debug.ts              # 本地 TTS 调试脚本
 │   ├── debug-cloud.ts        # 云端 TTS 调试脚本
 │   └── quick-start.sh        # 快速启动脚本
-├── tests/                    # 测试套件（33 个测试用例）
+├── tests/                    # 测试套件（42 个测试用例）
 │   ├── index.test.ts         # 引擎/队列/配置/情感 综合测试
 │   ├── cloud.test.ts         # 云端 Provider 测试
-│   └── piper.test.ts         # Piper 引擎测试
+│   ├── piper.test.ts         # Piper 引擎测试
+│   └── edge-tts.test.ts      # Edge TTS 引擎测试
 ├── dist/                     # TypeScript 编译产物
 ├── package.json
 └── tsconfig.json
@@ -603,6 +676,12 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 
 ## 更新日志
 
+### v1.0.3
+- 新增 Edge TTS 引擎（微软免费在线 TTS），发音极其自然
+- 支持 SSML 情感风格（cheerful/sad/angry/calm/excited）
+- 数百种音色可选，无需 API Key
+- 新增 9 个 Edge TTS 测试用例
+
 ### v1.0.2
 - 当前稳定版本
 - 支持 macOS / Windows / Linux 三平台本地 TTS 引擎
@@ -613,7 +692,7 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 - VoiceQueue 防抖队列机制
 - `${ENV_VAR}` 环境变量配置插值
 - CI/CD 自动化构建与发布流水线
-- 完整测试套件（33 个测试用例）
+- 完整测试套件（42 个测试用例）
 
 ### v0.0.5
 - 完善打包流程，支持 npm 包发布

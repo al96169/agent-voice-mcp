@@ -1,6 +1,6 @@
 {
   "name": "agent-voice-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "本地MCP服务，为开发Agent提供TTS语音播报能力",
   "type": "module",
   "main": "dist/index.js",
@@ -11,7 +11,8 @@
     "build": "tsc && node scripts/postbuild.mjs",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
-    "test": "tsx --test --test-concurrency=1 tests/cloud.test.ts tests/index.test.ts tests/piper.test.ts",
+    "pretest": "npm run build",
+    "test": "tsx --test --test-concurrency=1 tests/cloud.test.ts tests/index.test.ts tests/piper.test.ts tests/edge-tts.test.ts",
     "debug": "tsx scripts/debug.ts",
     "debug-cloud": "tsx scripts/debug-cloud.ts",
     "prepublishOnly": "npm run build"

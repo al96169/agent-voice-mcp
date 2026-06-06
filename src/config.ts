@@ -12,7 +12,7 @@ export interface SceneConfig {
   emotionIntensity?: number;
 }
 
-export type TTSEngineType = "say" | "piper" | "cloud";
+export type TTSEngineType = "say" | "piper" | "edge-tts" | "cloud";
 
 export interface AgentVoiceConfig {
   engine?: TTSEngineType;
