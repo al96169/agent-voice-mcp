@@ -1,6 +1,5 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
-import os from "node:os";
 
 describe("Notification Sound", () => {
   let playNotificationSound: typeof import("../dist/tts/notification-sound.js").playNotificationSound;
@@ -26,11 +25,6 @@ describe("Notification Sound", () => {
 
   it("should skip when notificationSound is false", async () => {
     await assert.doesNotReject(() => playNotificationSound(false));
-  });
-
-  it("should play macos system preset sound", { skip: os.platform() !== "darwin" ? "preset sounds only on macOS" : false }, async () => {
-    await assert.doesNotReject(() => playNotificationSound("pop"));
-    await assert.doesNotReject(() => playNotificationSound("tink"));
   });
 
   it("should fallback beep for unknown preset", async () => {

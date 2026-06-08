@@ -224,7 +224,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 | `volume` | 音量 0-1 | `1.0` |
 | `modelPath` | Piper 模型目录路径 | `models/piper/` |
 | `configPath` | Piper 配置文件路径 | `models/piper/piper.json` |
-| `notificationSound` | 播报提示音：`"melodious"`（默认）等 9 种内置音效，或 macOS 系统音效，设为 `false` 关闭 | `"melodious"` |
+| `notificationSound` | 播报提示音：`"melodious"`（默认）等 9 种内置音效，或 `"beep"`、自定义文件路径，设为 `false` 关闭 | `"melodious"` |
 | `cloud` | 云端引擎配置（engine 为 cloud 时必填） | - |
 | `scenes` | 各场景独立配置 | - |
 
@@ -242,7 +242,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 }
 ```
 
-**内置预设**（跨平台 WAV，打包在项目中）：
+**内置预设**（9 种跨平台 WAV）：
 
 | 值 | 说明 |
 |----|------|
@@ -255,29 +255,11 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 | `"sudden"` | 急促提示音 |
 | `"sudden_2"` | 急促提示音（变体） |
 | `"tactful"` | 温和的提示音 |
-
-**macOS 系统音效**（仅 macOS 可用）：
-
-| 值 | 说明 |
-|----|------|
-| `"ding"` | Glass.aiff |
-| `"pop"` | 短促的"啵" |
-| `"tink"` | 清脆的"叮" |
-| `"blow"` | 吹风声 |
-| `"bottle"` | 瓶子声 |
-| `"frog"` | 蛙声 |
-| `"funk"` | 电子音 |
-| `"purr"` | 猫咪呼噜声 |
-
-**其他选项**：
-
-| 值 | 说明 |
-|----|------|
 | `"beep"` | 终端蜂鸣声（`\x07`） |
 | `false` | 关闭提示音 |
 | 自定义路径 | 如 `"/Users/xxx/my-chime.wav"` |
 
-> 内置预设为跨平台 WAV 文件，Windows/Linux/macOS 均可使用。macOS 系统音效仅限 macOS，其他平台会回退为 beep。
+> 以上预设为跨平台 WAV 文件，Windows/Linux/macOS 均可使用。未识别音效名会回退为 beep。
 
 ---
 
@@ -735,7 +717,7 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 ### v1.0.4
 - 新增播报提示音功能：每条队列第一条语音前自动播放提示音
 - 内置 9 种跨平台 WAV 提示音（melodious/bright/ding_ding/gift/light/short/sudden/sudden_2/tactful），默认 melodious
-- 兼容 macOS 系统音效（ding/pop/tink 等）、终端 beep 和自定义音频文件路径
+- 兼容终端 beep 和自定义音频文件路径
 - 连续多条播报时仅在第一条前提示一次，间隔超 2 秒重置提示
 - 云端引擎在音频生成后、播放前触发提示音
 - 支持通过 `"notificationSound": false` 关闭提示音

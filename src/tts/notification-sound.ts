@@ -17,23 +17,10 @@ const BUILTIN_PRESETS = [
   "tactful",
 ] as const;
 
-// macOS system sound presets (fallback, macOS only)
-const MACOS_PRESETS: Record<string, string> = {
-  ding: "/System/Library/Sounds/Glass.aiff",
-  pop: "/System/Library/Sounds/Pop.aiff",
-  tink: "/System/Library/Sounds/Tink.aiff",
-  blow: "/System/Library/Sounds/Blow.aiff",
-  bottle: "/System/Library/Sounds/Bottle.aiff",
-  frog: "/System/Library/Sounds/Frog.aiff",
-  funk: "/System/Library/Sounds/Funk.aiff",
-  purr: "/System/Library/Sounds/Purr.aiff",
-};
-
 export type NotificationSoundPreset =
   | (typeof BUILTIN_PRESETS)[number]
   | "beep"
-  | "none"
-  | "ding";
+  | "none";
 
 // Resolve assets/ directory relative to the compiled dist/ layout
 function getAssetsDir(): string {
@@ -59,12 +46,7 @@ export async function playNotificationSound(sound?: string | false): Promise<voi
     }
   }
 
-  // 2. macOS system preset (legacy)
-  if (!soundPath && MACOS_PRESETS[sound] && existsSync(MACOS_PRESETS[sound])) {
-    soundPath = MACOS_PRESETS[sound];
-  }
-
-  // 3. Custom file path
+  // 2. Custom file path
   if (!soundPath && existsSync(sound)) {
     soundPath = sound;
   }
