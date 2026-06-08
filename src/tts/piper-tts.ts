@@ -52,8 +52,13 @@ export class PiperTTSEngine implements TTSEngine {
     return undefined;
   }
 
-  async speak(text: string, options?: TTSOptions): Promise<void> {
+  async speak(text: string, options?: TTSOptions, onBeforePlay?: () => Promise<void>): Promise<void> {
     await this.stop();
+
+    // Play notification before starting speech (for sync engines)
+    if (onBeforePlay) {
+      await onBeforePlay();
+    }
 
     const modelPath = this.resolveModel(options?.voice);
     const configPath = this.resolveConfig(modelPath);

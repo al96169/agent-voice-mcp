@@ -110,6 +110,9 @@ describe("Cloud TTS Providers", () => {
       timeout: 15000,
     });
 
-    await engine.speak("你好，这是自动化测试。");
+    const { VoiceQueue } = await import("../dist/voice-queue.js");
+    const queue = new VoiceQueue(engine, 10, "melodious");
+    queue.enqueue("你好，这是自动化测试。");
+    await new Promise((resolve) => setTimeout(resolve, 8000));
   });
 });

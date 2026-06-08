@@ -35,7 +35,7 @@ export class CloudTTSEngine implements TTSEngine {
     return this.provider.type;
   }
 
-  async speak(text: string, options?: TTSOptions): Promise<void> {
+  async speak(text: string, options?: TTSOptions, onBeforePlay?: () => Promise<void>): Promise<void> {
     await this.stop();
 
     try {
@@ -50,6 +50,11 @@ export class CloudTTSEngine implements TTSEngine {
       const tempFile = path.join(tmpdir(), `agent-voice-cloud-${Date.now()}${ext}`);
       this.tempFile = tempFile;
       writeFileSync(tempFile, audioBuffer);
+
+      // Play notification sound after synthesis, before local playback
+      if (onBeforePlay) {
+        await onBeforePlay();
+      }
 
       await this.playAudio(tempFile);
     } catch (err) {

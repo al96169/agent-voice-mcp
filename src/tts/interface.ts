@@ -9,7 +9,7 @@ export interface TTSOptions {
 }
 
 export interface TTSEngine {
-  speak(text: string, options?: TTSOptions): Promise<void>;
+  speak(text: string, options?: TTSOptions, onBeforePlay?: () => Promise<void>): Promise<void>;
   stop(): void;
   getVoices(): Promise<string[]>;
 }

@@ -1,0 +1,124 @@
+import { spawn, execSync } from "child_process";
+import { existsSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import os from "os";
+
+// Built-in notification sound presets (cross-platform WAV files in assets/)
+const BUILTIN_PRESETS = [
+  "melodious",
+  "bright",
+  "ding_ding",
+  "gift",
+  "light",
+  "short",
+  "sudden",
+  "sudden_2",
+  "tactful",
+] as const;
+
+// macOS system sound presets (fallback, macOS only)
+const MACOS_PRESETS: Record<string, string> = {
+  ding: "/System/Library/Sounds/Glass.aiff",
+  pop: "/System/Library/Sounds/Pop.aiff",
+  tink: "/System/Library/Sounds/Tink.aiff",
+  blow: "/System/Library/Sounds/Blow.aiff",
+  bottle: "/System/Library/Sounds/Bottle.aiff",
+  frog: "/System/Library/Sounds/Frog.aiff",
+  funk: "/System/Library/Sounds/Funk.aiff",
+  purr: "/System/Library/Sounds/Purr.aiff",
+};
+
+export type NotificationSoundPreset =
+  | (typeof BUILTIN_PRESETS)[number]
+  | "beep"
+  | "none"
+  | "ding";
+
+// Resolve assets/ directory relative to the compiled dist/ layout
+function getAssetsDir(): string {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  // dist/tts/notification-sound.js -> ../../assets
+  return path.resolve(moduleDir, "..", "..", "assets");
+}
+
+export async function playNotificationSound(sound?: string | false): Promise<void> {
+  if (sound === false) return;
+
+  let soundPath: string | null = null;
+
+  if (!sound) {
+    sound = "melodious";
+  }
+
+  // 1. Built-in preset (cross-platform WAV)
+  if ((BUILTIN_PRESETS as readonly string[]).includes(sound)) {
+    const candidate = path.join(getAssetsDir(), `${sound}.wav`);
+    if (existsSync(candidate)) {
+      soundPath = candidate;
+    }
+  }
+
+  // 2. macOS system preset (legacy)
+  if (!soundPath && MACOS_PRESETS[sound] && existsSync(MACOS_PRESETS[sound])) {
+    soundPath = MACOS_PRESETS[sound];
+  }
+
+  // 3. Custom file path
+  if (!soundPath && existsSync(sound)) {
+    soundPath = sound;
+  }
+
+  // 4. Beep fallback
+  if (sound === "beep" || !soundPath) {
+    process.stdout.write("\x07");
+    return;
+  }
+
+  // Play the sound file
+  const playerCmd = getPlayerCommand();
+  await playFile(playerCmd, soundPath);
+}
+
+function getPlayerCommand(): string {
+  switch (os.platform()) {
+    case "darwin":
+      return "afplay";
+    case "win32":
+      return "powershell";
+    case "linux":
+      try {
+        execSync("which aplay", { stdio: "ignore" });
+        return "aplay";
+      } catch {
+        try {
+          execSync("which paplay", { stdio: "ignore" });
+          return "paplay";
+        } catch {
+          return "aplay";
+        }
+      }
+    default:
+      return "afplay";
+  }
+}
+
+function playFile(command: string, filePath: string): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let args: string[];
+    if (command === "powershell") {
+      args = [
+        "-c",
+        `(New-Object Media.SoundPlayer '${filePath}').PlaySync();`,
+      ];
+    } else {
+      args = [filePath];
+    }
+
+    const proc = spawn(command, args, { stdio: "ignore", detached: true });
+    proc.unref();
+
+    // Fire-and-forget: resolve immediately so TTS overlaps with notification sound
+    resolve();
+  });
+}

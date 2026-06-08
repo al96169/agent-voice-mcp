@@ -21,6 +21,7 @@ export interface AgentVoiceConfig {
   volume?: number;
   modelPath?: string;
   configPath?: string;
+  notificationSound?: string | false;
   cloud?: CloudTTSConfig;
   scenes?: {
     task_start?: SceneConfig;

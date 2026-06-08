@@ -12,8 +12,13 @@ const EMOTION_VOICE_OVERRIDES: Partial<Record<EmotionType, { voice?: string; rat
 export class MacOSSayEngine implements TTSEngine {
   private currentProcess: ReturnType<typeof spawn> | null = null;
 
-  async speak(text: string, options?: TTSOptions): Promise<void> {
+  async speak(text: string, options?: TTSOptions, onBeforePlay?: () => Promise<void>): Promise<void> {
     await this.stop();
+
+    // Play notification before starting speech (for sync engines)
+    if (onBeforePlay) {
+      await onBeforePlay();
+    }
 
     let resolvedOptions = { ...options };
 

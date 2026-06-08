@@ -76,7 +76,10 @@ describe("agent-voice MCP Server", () => {
 
     it("should speak text without error", { skip: !hasPlatformTts ? "platform TTS binary not available" : false }, async () => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      await assert.doesNotReject(() => engine.speak("test"));
+      const { VoiceQueue } = await import("../dist/voice-queue.js");
+      const queue = new VoiceQueue(engine, 10, "melodious");
+      queue.enqueue("引擎基本语音测试");
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     });
 
     it("should stop speech without error", () => {

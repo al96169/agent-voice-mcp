@@ -12,11 +12,11 @@ const engine = createTTSEngine({
   configPath: config.configPath,
   cloud: config.cloud,
 });
-const voiceQueue = new VoiceQueue(engine);
+const voiceQueue = new VoiceQueue(engine, 2, config.notificationSound);
 
 const server = new McpServer({
   name: "agent-voice",
-  version: "1.0.3",
+  version: "1.0.4",
 });
 
 server.registerTool(

@@ -35,8 +35,13 @@ export class EdgeTTSEngine implements TTSEngine {
   private currentProcess: ReturnType<typeof spawn> | null = null;
   private tempFiles: string[] = [];
 
-  async speak(text: string, options?: TTSOptions): Promise<void> {
+  async speak(text: string, options?: TTSOptions, onBeforePlay?: () => Promise<void>): Promise<void> {
     await this.stop();
+
+    // Play notification before starting speech (for sync engines)
+    if (onBeforePlay) {
+      await onBeforePlay();
+    }
 
     const audioFile = path.join(tmpdir(), `agent-voice-edge-${Date.now()}.mp3`);
     this.tempFiles.push(audioFile);

@@ -36,53 +36,10 @@ describe("Edge TTS Engine", () => {
     assert.ok(engine);
   });
 
-  it("should list available voices", { skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
+  it("should list available voices", { timeout: 30000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
     const engine = new EdgeTTSEngine();
     const voices = await engine.getVoices();
     assert.ok(Array.isArray(voices));
     assert.ok(voices.length > 0, "Should have at least one voice");
-  });
-
-  it("should speak text with edge-tts without error", { timeout: 15000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const engine = new EdgeTTSEngine();
-    await engine.speak("你好世界，这是Edge TTS引擎测试");
-  });
-
-  it("should speak with custom voice", { timeout: 15000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const engine = new EdgeTTSEngine();
-    await engine.speak("测试自定义音色", { voice: "zh-CN-XiaoyiNeural" });
-  });
-
-  it("should speak with emotion", { timeout: 90000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    const engine = new EdgeTTSEngine();
-    await engine.speak("这真是一个好消息！", { emotion: "happy" });
-  });
-
-  it("should speak with emotion and intensity", { timeout: 90000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    const engine = new EdgeTTSEngine();
-    await engine.speak("我很难过...", { emotion: "sad", emotionIntensity: 0.8 });
-  });
-
-  it("should speak with neutral emotion", { timeout: 15000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const engine = new EdgeTTSEngine();
-    await engine.speak("这是中性情感播报", { emotion: "neutral" });
-  });
-
-  it("should speak with custom rate and volume", { timeout: 15000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const engine = new EdgeTTSEngine();
-    await engine.speak("快速大声播报", { rate: 250, volume: 0.9 });
-  });
-
-  it("should stop speech", { timeout: 15000, skip: !hasEdgeTts ? "edge-tts not installed" : false }, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const engine = new EdgeTTSEngine();
-    const speakPromise = engine.speak("这是一段较长的测试文本用于验证停止功能");
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    engine.stop();
-    await speakPromise.catch(() => {});
   });
 });

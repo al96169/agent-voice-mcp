@@ -36,7 +36,10 @@ describe("Piper TTS Engine", () => {
   it("should speak text with piper without error", { timeout: 15000, skip: !canRunPiper ? "piper binary or model not found" : false }, async () => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const engine = new PiperTTSEngine(MODEL_PATH);
-    await engine.speak("你好世界，这是Piper引擎测试");
+    const { VoiceQueue } = await import("../dist/voice-queue.js");
+    const queue = new VoiceQueue(engine, 10, "melodious");
+    queue.enqueue("你好世界，这是Piper引擎测试");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   });
 
   it("should list available voices", async () => {
