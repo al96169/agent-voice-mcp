@@ -77,10 +77,14 @@ export async function playNotificationSound(sound?: string | false): Promise<voi
 
   // Play the sound file
   const playerCmd = getPlayerCommand();
+  if (!playerCmd) {
+    process.stdout.write("\x07");
+    return;
+  }
   await playFile(playerCmd, soundPath);
 }
 
-function getPlayerCommand(): string {
+function getPlayerCommand(): string | null {
   switch (os.platform()) {
     case "darwin":
       return "afplay";
@@ -95,11 +99,11 @@ function getPlayerCommand(): string {
           execSync("which paplay", { stdio: "ignore" });
           return "paplay";
         } catch {
-          return "aplay";
+          return null;
         }
       }
     default:
-      return "afplay";
+      return null;
   }
 }
 
@@ -115,8 +119,12 @@ function playFile(command: string, filePath: string): Promise<void> {
       args = [filePath];
     }
 
-    const proc = spawn(command, args, { stdio: "ignore", detached: true });
-    proc.unref();
+    try {
+      const proc = spawn(command, args, { stdio: "ignore", detached: true });
+      proc.unref();
+    } catch {
+      // spawn failed (e.g. binary not found), silent ignore
+    }
 
     // Fire-and-forget: resolve immediately so TTS overlaps with notification sound
     resolve();
