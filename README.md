@@ -224,7 +224,7 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 | `volume` | 音量 0-1 | `1.0` |
 | `modelPath` | Piper 模型目录路径 | `models/piper/` |
 | `configPath` | Piper 配置文件路径 | `models/piper/piper.json` |
-| `notificationSound` | 播报提示音：`"ding"` / `"pop"` / `"tink"` / `"beep"` 或自定义文件路径，设为 `false` 关闭 | `"ding"` |
+| `notificationSound` | 播报提示音：`"melodious"`（默认）等 9 种内置音效，或 macOS 系统音效，设为 `false` 关闭 | `"melodious"` |
 | `cloud` | 云端引擎配置（engine 为 cloud 时必填） | - |
 | `scenes` | 各场景独立配置 | - |
 
@@ -238,15 +238,29 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 
 ```json
 {
-  "notificationSound": "ding"
+  "notificationSound": "melodious"
 }
 ```
 
-**可用预设**（macOS 系统音效）：
+**内置预设**（跨平台 WAV，打包在项目中）：
 
 | 值 | 说明 |
 |----|------|
-| `"ding"` | 默认，"叮"一声（Glass.aiff） |
+| `"melodious"` | 默认，清脆悦耳的提示音 |
+| `"bright"` | 明亮的提示音 |
+| `"ding_ding"` | 两次叮声 |
+| `"gift"` | 礼物提示音 |
+| `"light"` | 轻巧的提示音 |
+| `"short"` | 最简短的提示 |
+| `"sudden"` | 急促提示音 |
+| `"sudden_2"` | 急促提示音（变体） |
+| `"tactful"` | 温和的提示音 |
+
+**macOS 系统音效**（仅 macOS 可用）：
+
+| 值 | 说明 |
+|----|------|
+| `"ding"` | Glass.aiff |
 | `"pop"` | 短促的"啵" |
 | `"tink"` | 清脆的"叮" |
 | `"blow"` | 吹风声 |
@@ -254,11 +268,16 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 | `"frog"` | 蛙声 |
 | `"funk"` | 电子音 |
 | `"purr"` | 猫咪呼噜声 |
-| `"beep"` | 终端蜂鸣声（跨平台） |
-| `false` | 关闭提示音 |
-| 自定义路径 | 如 `"/Users/xxx/my-chime.mp3"` |
 
-> macOS 预设音效文件位于 `/System/Library/Sounds/`。Windows/Linux 下若预设文件不存在，自动回退为终端蜂鸣声 `\x07`。
+**其他选项**：
+
+| 值 | 说明 |
+|----|------|
+| `"beep"` | 终端蜂鸣声（`\x07`） |
+| `false` | 关闭提示音 |
+| 自定义路径 | 如 `"/Users/xxx/my-chime.wav"` |
+
+> 内置预设为跨平台 WAV 文件，Windows/Linux/macOS 均可使用。macOS 系统音效仅限 macOS，其他平台会回退为 beep。
 
 ---
 
@@ -615,7 +634,7 @@ npm run debug-cloud
 ## 测试
 
 ```bash
-npm test    # 运行全部 49 个测试用例（顺序执行，避免音频同时播放）
+npm test    # 运行全部 45 个测试用例（顺序执行，避免音频同时播放）
 ```
 
 ### 前置准备
@@ -674,12 +693,14 @@ agent-voice/
 │   ├── debug.ts              # 本地 TTS 调试脚本
 │   ├── debug-cloud.ts        # 云端 TTS 调试脚本
 │   └── quick-start.sh        # 快速启动脚本
-├── tests/                    # 测试套件（49 个测试用例）
+├── tests/                    # 测试套件（45 个测试用例）
 │   ├── index.test.ts         # 引擎/队列/配置/情感 综合测试
 │   ├── cloud.test.ts         # 云端 Provider 测试
 │   ├── piper.test.ts         # Piper 引擎测试
-│   ├── edge-tts.test.ts      # Edge TTS 引擎测试
-│   └── notification.test.ts  # 播报提示音测试
+│   ├── edge-tts.test.ts      # Edge TTS 引擎测试（基础）
+│   ├── notification.test.ts  # 播报提示音测试
+│   └── notification-integration.test.ts # 提示音集成测试
+├── assets/                    # 内置提示音 WAV 文件（构建时复制到 dist/）
 ├── dist/                     # TypeScript 编译产物
 ├── package.json
 └── tsconfig.json
@@ -712,12 +733,14 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 ## 更新日志
 
 ### v1.0.4
-- 新增播报提示音功能：每条队列第一条语音前自动播放提示音（"叮咚"）
-- 支持多种预设音效（ding/pop/tink/beep 等）和自定义音频文件路径
-- 支持通过配置关闭提示音（`"notificationSound": false`）
-- 连续多条播报时仅在第一条前提示一次
+- 新增播报提示音功能：每条队列第一条语音前自动播放提示音
+- 内置 9 种跨平台 WAV 提示音（melodious/bright/ding_ding/gift/light/short/sudden/sudden_2/tactful），默认 melodious
+- 兼容 macOS 系统音效（ding/pop/tink 等）、终端 beep 和自定义音频文件路径
+- 连续多条播报时仅在第一条前提示一次，间隔超 2 秒重置提示
 - 云端引擎在音频生成后、播放前触发提示音
-- 新增 7 个提示音测试用例
+- 支持通过 `"notificationSound": false` 关闭提示音
+- 提示音等待播放完成后再开始 TTS，确保不被覆盖
+- 新增 12 个提示音相关测试用例（8 基础 + 2 集成 + 2 入队）
 
 ### v1.0.3
 - 新增 Edge TTS 引擎（微软免费在线 TTS），发音极其自然
@@ -735,7 +758,7 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 - VoiceQueue 防抖队列机制
 - `${ENV_VAR}` 环境变量配置插值
 - CI/CD 自动化构建与发布流水线
-- 完整测试套件（49 个测试用例）
+- 完整测试套件（45 个测试用例）
 
 ### v0.0.5
 - 完善打包流程，支持 npm 包发布
