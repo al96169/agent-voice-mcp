@@ -119,14 +119,23 @@ function playFile(command: string, filePath: string): Promise<void> {
       args = [filePath];
     }
 
+    let proc;
     try {
-      const proc = spawn(command, args, { stdio: "ignore", detached: true });
-      proc.unref();
+      proc = spawn(command, args, { stdio: "ignore" });
     } catch {
-      // spawn failed (e.g. binary not found), silent ignore
+      // spawn failed (e.g. binary not found in CI), resolve silently
+      return resolve();
     }
 
-    // Fire-and-forget: resolve immediately so TTS overlaps with notification sound
-    resolve();
+    const done = () => {
+      try { proc.kill(); } catch { /* ignore */ }
+      resolve();
+    };
+
+    proc.on("close", done);
+    proc.on("error", () => resolve());
+
+    // Timeout: don't wait longer than 3s for notification sound
+    setTimeout(done, 3000);
   });
 }
