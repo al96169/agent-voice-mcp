@@ -16,7 +16,7 @@ const voiceQueue = new VoiceQueue(engine, 2, config.notificationSound);
 
 const server = new McpServer({
   name: "agent-voice",
-  version: "1.0.4",
+  version: "1.0.5",
 });
 
 server.registerTool(

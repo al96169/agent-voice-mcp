@@ -1,4 +1,4 @@
-# agent-voice v1.0.4
+# agent-voice v1.0.5
 
 为 AI Agent 提供 TTS 语音播报能力的通用 MCP 服务。在 Agent 的任务生命周期、关键节点、交互式询问时自动通过 TTS 语音提醒用户。适用于 Trae、Claude Desktop、Cursor、WindSurf 等所有支持 MCP 的 Agent。
 
@@ -616,7 +616,7 @@ npm run debug-cloud
 ## 测试
 
 ```bash
-npm test    # 运行全部 45 个测试用例（顺序执行，避免音频同时播放）
+npm test    # 运行全部 44 个测试用例（顺序执行，避免音频同时播放）
 ```
 
 ### 前置准备
@@ -675,7 +675,7 @@ agent-voice/
 │   ├── debug.ts              # 本地 TTS 调试脚本
 │   ├── debug-cloud.ts        # 云端 TTS 调试脚本
 │   └── quick-start.sh        # 快速启动脚本
-├── tests/                    # 测试套件（45 个测试用例）
+├── tests/                    # 测试套件（44 个测试用例）
 │   ├── index.test.ts         # 引擎/队列/配置/情感 综合测试
 │   ├── cloud.test.ts         # 云端 Provider 测试
 │   ├── piper.test.ts         # Piper 引擎测试
@@ -714,6 +714,11 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 
 ## 更新日志
 
+### v1.0.5
+- 移除 macOS 系统音效，统一使用 9 种内置跨平台 WAV 预设
+- 修复 Windows PowerShell `PlaySync()` 阻塞 MCP 超时问题，改用 `Play()` + `Start-Sleep`
+- 修复 CI `spawn aplay ENOENT` 错误，无音频播放器时优雅降级为 beep
+
 ### v1.0.4
 - 新增播报提示音功能：每条队列第一条语音前自动播放提示音
 - 内置 9 种跨平台 WAV 提示音（melodious/bright/ding_ding/gift/light/short/sudden/sudden_2/tactful），默认 melodious
@@ -722,7 +727,7 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 - 云端引擎在音频生成后、播放前触发提示音
 - 支持通过 `"notificationSound": false` 关闭提示音
 - 提示音等待播放完成后再开始 TTS，确保不被覆盖
-- 新增 12 个提示音相关测试用例（8 基础 + 2 集成 + 2 入队）
+- 新增 11 个提示音相关测试用例（7 基础 + 2 集成 + 2 入队）
 
 ### v1.0.3
 - 新增 Edge TTS 引擎（微软免费在线 TTS），发音极其自然
@@ -740,7 +745,7 @@ macOS 用户检查是否安装了 afplay（系统自带）。如果 afplay 无�
 - VoiceQueue 防抖队列机制
 - `${ENV_VAR}` 环境变量配置插值
 - CI/CD 自动化构建与发布流水线
-- 完整测试套件（45 个测试用例）
+- 完整测试套件（44 个测试用例）
 
 ### v0.0.5
 - 完善打包流程，支持 npm 包发布
