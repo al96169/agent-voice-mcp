@@ -95,7 +95,7 @@ function playFile(command: string, filePath: string): Promise<void> {
     if (command === "powershell") {
       args = [
         "-c",
-        `(New-Object Media.SoundPlayer '${filePath}').PlaySync();`,
+        `(New-Object Media.SoundPlayer '${filePath}').Play(); Start-Sleep -Seconds 3`,
       ];
     } else {
       args = [filePath];
