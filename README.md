@@ -1,4 +1,4 @@
-# agent-voice v1.0.5
+# agent-voice v1.0.6
 
 为 AI Agent 提供 TTS 语音播报能力的通用 MCP 服务。在 Agent 的任务生命周期、关键节点、交互式询问时自动通过 TTS 语音提醒用户。适用于 Trae、Claude Desktop、Cursor、WindSurf 等所有支持 MCP 的 Agent。
 
