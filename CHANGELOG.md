@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-06-10
+
+### Fixed
+- 修复 npm 包中提示音 WAV 文件路径错误（`getAssetsDir` 从 `../../assets` 改为 `../assets`，正确指向 `dist/assets/`）
+- 蜂鸣回退从 `stdout` 写入改为 `stderr`，避免污染 MCP JSON-RPC 协议通信
+
 ## [1.0.3] - 2026-06-06
 
 ### Added
