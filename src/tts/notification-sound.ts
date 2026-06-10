@@ -25,8 +25,8 @@ export type NotificationSoundPreset =
 // Resolve assets/ directory relative to the compiled dist/ layout
 function getAssetsDir(): string {
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-  // dist/tts/notification-sound.js -> ../../assets
-  return path.resolve(moduleDir, "..", "..", "assets");
+  // dist/tts/notification-sound.js -> ../assets
+  return path.resolve(moduleDir, "..", "assets");
 }
 
 export async function playNotificationSound(sound?: string | false): Promise<void> {
@@ -51,16 +51,16 @@ export async function playNotificationSound(sound?: string | false): Promise<voi
     soundPath = sound;
   }
 
-  // 4. Beep fallback
+  // 4. Beep fallback (use stderr to avoid corrupting MCP stdout protocol)
   if (sound === "beep" || !soundPath) {
-    process.stdout.write("\x07");
+    process.stderr.write("\x07");
     return;
   }
 
   // Play the sound file
   const playerCmd = getPlayerCommand();
   if (!playerCmd) {
-    process.stdout.write("\x07");
+    process.stderr.write("\x07");
     return;
   }
   await playFile(playerCmd, soundPath);
