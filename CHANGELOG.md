@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-13
+
+### Added
+- 多角色支持：可配置不同的 TTS 角色（如"助手"、"用户"、"系统"），每个角色包含完整的 TTS 参数（音色、语速、音量、情感、场景、提示音）
+- 角色目标范围：通过 `target` 字段描述角色适用范围（如"给Trae使用"），Agent 可自行判断并选择角色
+- `speak` 工具新增 `role` 参数，支持按名称或目标范围匹配角色
+- 角色匹配规则：精确匹配 name → 模糊匹配 target → 回退到第一个角色
+- 角色级提示音：每个角色可独立配置 `notificationSound`
+- 角色级场景配置：角色场景配置优先级高于全局场景配置
+
 ## [1.0.6] - 2026-06-10
 
 ### Fixed

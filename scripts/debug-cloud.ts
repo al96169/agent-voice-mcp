@@ -3,27 +3,27 @@ import { OpenAIProvider } from "../src/tts/cloud/providers/openai.js";
 import { CustomHTTPProvider } from "../src/tts/cloud/providers/custom.js";
 import { loadConfig } from "../src/config.js";
 import type { CloudTTSConfig, VolcanoConfig, OpenAIConfig } from "../src/tts/cloud/types.js";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync, unlinkSync } from "fs";
 import { execSync } from "child_process";
 import path from "path";
 import os from "os";
 
+const MAIN_CONFIG_PATH = path.join(os.homedir(), ".agent-voice", "config.json");
 const DEBUG_CONFIG_PATH = path.join(os.homedir(), ".agent-voice", "debug-cloud.json");
 
 async function main() {
-  console.log("=== agent-voice Cloud TTS Debug ===\n");
-  console.log("Config:", DEBUG_CONFIG_PATH);
+  console.log("=== agent-voice 云端引擎专用测试 ===\n");
 
-  const args = process.argv.slice(2);
-  const configPath = args[0] || DEBUG_CONFIG_PATH;
-
+  // 优先读 config.json，其次 debug-cloud.json
+  const configPath = existsSync(MAIN_CONFIG_PATH) ? MAIN_CONFIG_PATH : DEBUG_CONFIG_PATH;
   const config = loadConfig(configPath);
   const cloud = config.cloud as CloudTTSConfig | undefined;
 
   if (!cloud) {
     console.error(
-      `No cloud config found.\n\nCreate ${configPath}:\n\n` +
+      `未找到云端引擎配置。\n\n请在 ${MAIN_CONFIG_PATH} 中添加 cloud 字段：\n\n` +
       '{\n' +
+      '  "engine": "cloud",\n' +
       '  "cloud": {\n' +
       '    "provider": "volcano",\n' +
       '    "token": "${VOLCANO_TOKEN}",\n' +
@@ -32,12 +32,16 @@ async function main() {
       '    "timeout": 30000\n' +
       '  }\n' +
       '}\n\n' +
-      "Then set env vars and run:\n" +
-      "  VOLCANO_TOKEN=xxx VOLCANO_APP_ID=xxx npm run debug-cloud\n"
+      "或创建 ${DEBUG_CONFIG_PATH} 文件。\n\n" +
+      "支持三种 provider 类型：\n" +
+      "  - volcano  (火山引擎/豆包语音)\n" +
+      "  - openai   (OpenAI / DeepSeek 兼容)\n" +
+      "  - custom   (通用 HTTP API)\n"
     );
     process.exit(1);
   }
 
+  console.log(`配置来源: ${configPath}`);
   console.log(`Provider: ${cloud.provider}`);
   console.log();
 
@@ -74,6 +78,7 @@ async function testVolcano(config: VolcanoConfig) {
     writeFileSync(outPath, buffer);
     console.log(`Saved: ${outPath}`);
     playAudio(outPath);
+    try { unlinkSync(outPath); } catch { /* ignore */ }
   } catch (err) {
     console.error("FAILED:", err instanceof Error ? err.message : err);
   }
@@ -93,6 +98,7 @@ async function testVolcano(config: VolcanoConfig) {
     writeFileSync(outPath, buffer);
     console.log(`Saved: ${outPath}`);
     playAudio(outPath);
+    try { unlinkSync(outPath); } catch { /* ignore */ }
   } catch (err) {
     console.error("FAILED:", err instanceof Error ? err.message : err);
   }
@@ -126,6 +132,7 @@ async function testOpenAI(config: OpenAIConfig) {
     writeFileSync(outPath, buffer);
     console.log(`Saved: ${outPath}`);
     playAudio(outPath);
+    try { unlinkSync(outPath); } catch { /* ignore */ }
   } catch (err) {
     console.error("FAILED:", err instanceof Error ? err.message : err);
   }

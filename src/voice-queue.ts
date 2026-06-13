@@ -5,6 +5,7 @@ interface QueueItem {
   text: string;
   options?: TTSOptions;
   enqueuedAt: number;
+  notificationSound?: string | false;
 }
 
 const NOTIFICATION_GAP_MS = 2000;
@@ -17,6 +18,8 @@ export class VoiceQueue {
   private notificationSound?: string | false;
   private hasPlayedNotification = false;
   private prevEnqueuedAt = 0;
+  private doneResolve: (() => void) | null = null;
+  private donePromise: Promise<void> | null = null;
 
   constructor(engine: TTSEngine, maxSize = 2, notificationSound?: string | false) {
     this.engine = engine;
@@ -24,11 +27,11 @@ export class VoiceQueue {
     this.notificationSound = notificationSound;
   }
 
-  enqueue(text: string, options?: TTSOptions): void {
+  enqueue(text: string, options?: TTSOptions, notificationSound?: string | false): void {
     while (this.queue.length >= this.maxSize) {
       this.queue.shift();
     }
-    this.queue.push({ text, options, enqueuedAt: Date.now() });
+    this.queue.push({ text, options, enqueuedAt: Date.now(), notificationSound });
     this.processQueue();
   }
 
@@ -61,7 +64,7 @@ export class VoiceQueue {
         let onBeforePlay: (() => Promise<void>) | undefined;
 
         if (!this.hasPlayedNotification && this.notificationSound !== false) {
-          const sound = this.notificationSound;
+          const sound = item.notificationSound ?? this.notificationSound;
           this.hasPlayedNotification = true;
           onBeforePlay = () => playNotificationSound(sound);
         }
@@ -76,6 +79,23 @@ export class VoiceQueue {
 
     if (this.queue.length > 0) {
       this.processQueue();
+    } else if (this.doneResolve) {
+      this.doneResolve();
+      this.doneResolve = null;
+      this.donePromise = null;
     }
+  }
+
+  /** 返回一个 Promise，队列中所有语音播放完成后 resolve */
+  waitForDone(): Promise<void> {
+    if (!this.processing && this.queue.length === 0) {
+      return Promise.resolve();
+    }
+    if (!this.donePromise) {
+      this.donePromise = new Promise((resolve) => {
+        this.doneResolve = resolve;
+      });
+    }
+    return this.donePromise;
   }
 }

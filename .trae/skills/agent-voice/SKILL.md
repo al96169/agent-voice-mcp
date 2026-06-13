@@ -82,3 +82,15 @@ mcp__agent-voice__speak(text="需要你的确认：<问题简述>", scene="need_
 - 每个场景在一次对话中同类播报最多 1-2 次，避免扰民
 - `scene` 参数会自动匹配配置文件中的场景音色/语速/音量
 - `emotion` 参数在 macOS 上通过音色切换和语速调节模拟，云端 TTS 将支持原生情感
+
+## 角色参数（v1.1.0）
+
+如果配置文件配置了多角色，可通过 `role` 参数指定要使用的角色：
+```
+mcp__agent-voice__speak(text="...", scene="task_start", role="Trae")
+```
+
+- `role` 参数支持按角色名称（`name`）或目标范围（`target`）匹配
+- 匹配规则：精确匹配 `name` → 模糊匹配 `target`（双向包含） → 回退到第一个角色
+- 未指定 `role` 时，自动使用配置的第一个角色
+- 无角色配置时，`role` 参数无效果

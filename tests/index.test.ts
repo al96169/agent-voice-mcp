@@ -274,4 +274,5 @@ describe("agent-voice MCP Server", () => {
       await assert.doesNotReject(() => engine.speak("test", { emotion: "neutral" }));
     });
   });
+
 });

@@ -1,4 +1,4 @@
-# agent-voice v1.0.6
+# agent-voice v1.1.0
 
 为 AI Agent 提供 TTS 语音播报能力的通用 MCP 服务。在 Agent 的任务生命周期、关键节点、交互式询问时自动通过 TTS 语音提醒用户。适用于 Trae、Claude Desktop、Cursor、WindSurf 等所有支持 MCP 的 Agent。
 
@@ -227,6 +227,86 @@ Keep the text under 50 characters. Use the appropriate "scene" parameter.
 | `notificationSound` | 播报提示音：`"melodious"`（默认）等 9 种内置音效，或 `"beep"`、自定义文件路径，设为 `false` 关闭 | `"melodious"` |
 | `cloud` | 云端引擎配置（engine 为 cloud 时必填） | - |
 | `scenes` | 各场景独立配置 | - |
+| `roles` | 多角色配置（v1.1.0），支持为不同 Agent 配置不同的 TTS 参数 | - |
+
+### 多角色配置（v1.1.0）
+
+支持为不同的 Agent 或场景配置独立的 TTS 角色，每个角色拥有完整的 TTS 参数（音色、语速、音量、情感、场景、提示音）。
+
+```json
+{
+  "roles": [
+    {
+      "name": "助手",
+      "target": "给Trae使用",
+      "voice": "Tingting",
+      "rate": 220,
+      "notificationSound": "melodious",
+      "scenes": {
+        "task_start": { "emotion": "calm" },
+        "task_complete": { "emotion": "happy" }
+      }
+    },
+    {
+      "name": "用户",
+      "target": "给Claude使用",
+      "voice": "Sinji",
+      "rate": 200,
+      "emotion": "calm"
+    },
+    {
+      "name": "系统",
+      "target": "给系统使用",
+      "voice": "Default",
+      "rate": 250,
+      "emotion": "neutral"
+    }
+  ]
+}
+```
+
+| 字段 | 说明 | 默认值 |
+|------|------|--------|
+| `name` | 角色名称，如"助手"、"用户"、"系统" | 必填 |
+| `target` | 角色目标范围，如"给Trae使用"，Agent 据此自动匹配角色 | - |
+| `voice` | 角色默认音色 | 继承全局 |
+| `rate` | 角色默认语速 | 继承全局 |
+| `volume` | 角色默认音量 | 继承全局 |
+| `emotion` | 角色默认情感 | - |
+| `emotionIntensity` | 角色默认情感强度 | - |
+| `notificationSound` | 角色播报提示音 | 继承全局 |
+| `scenes` | 角色场景独立配置（优先级高于全局 scenes） | - |
+
+**角色匹配规则**：
+1. 通过 `speak` 的 `role` 参数精确匹配 `name`
+2. 模糊匹配 `target`（双向包含，如 `role="Trae"` 匹配 `target="给Trae使用"`）
+3. 无匹配或未指定 `role` 时，使用 `roles` 数组中的第一个角色
+4. 未配置 `roles` 时，`role` 参数无效果，行为与旧版本一致
+
+**调用示例**：
+
+```
+// 指定角色
+mcp__agent-voice__speak(text="任务完成", role="Trae", scene="task_complete")
+
+// 未指定角色，使用第一个
+mcp__agent-voice__speak(text="任务开始", scene="task_start")
+```
+
+**参数优先级**（从低到高）：
+全局默认 → 角色默认 → 全局场景配置 → 角色场景配置 → 调用时参数
+
+### 旧版本兼容说明
+
+如果使用 **v1.0.x 及更早版本** 启动 `agent-voice-mcp`，但配置文件 `~/.agent-voice/config.json` 中已包含 v1.1.0 新增的 `roles` 字段：
+
+| 场景 | 行为 | 建议 |
+|------|------|------|
+| 配置中有 `roles`，但运行旧版 MCP 服务 | `roles` 字段被静默忽略，按旧版全局配置工作，**不会报错或崩溃** | 升级到 v1.1.0 即可启用多角色 |
+| Skill/Agent 在 `speak` 调用中传入 `role` 参数 | 旧版服务不认识该参数，Zod schema 校验失败，返回参数错误 | 先升级 MCP 服务版本，或暂时不传 `role` |
+| 配置文件完全无 `roles` | 行为与旧版完全相同，向后兼容 | 无需操作 |
+
+> 总结：旧版本能**安全运行**带有 `roles` 的配置文件（多出字段被忽略），但 `role` 调用参数只有在 v1.1.0+ 才可用。升级后配置文件无需改动即可启用多角色。
 
 ---
 

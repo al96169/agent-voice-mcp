@@ -55,6 +55,41 @@ mcp__agent-voice__speak(text="任务执行出错：<错误简述>", scene="task_
 mcp__agent-voice__speak(text="需要你的确认：<问题简述>", scene="need_interaction", emotion="calm")
 ```
 
+## 角色参数（v1.1.0）
+
+如果配置文件配置了多角色，可通过 `role` 参数指定要使用的角色：
+```
+mcp__agent-voice__speak(text="...", scene="task_start", role="Trae")
+```
+
+- `role` 参数支持按角色名称（`name`）或目标范围（`target`）匹配
+- 匹配规则：精确匹配 `name` → 模糊匹配 `target`（双向包含） → 回退到第一个角色
+- 未指定 `role` 时，自动使用配置的第一个角色
+- 无角色配置时，`role` 参数无效果
+
+示例配置文件 `~/.agent-voice/config.json`:
+```json
+{
+  "roles": [
+    {
+      "name": "助手",
+      "target": "给Trae使用",
+      "voice": "Tingting",
+      "rate": 220,
+      "scenes": {
+        "task_start": { "emotion": "calm" }
+      }
+    },
+    {
+      "name": "用户",
+      "target": "给Claude使用",
+      "voice": "Sinji",
+      "rate": 200
+    }
+  ]
+}
+```
+
 ## 情感参数
 
 每个场景应搭配对应的 `emotion` 参数，可选值：

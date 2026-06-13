@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import * as z from "zod/v4";
 import { createTTSEngine } from "./tts/factory.js";
 import { VoiceQueue } from "./voice-queue.js";
-import { loadConfig, resolveOptions } from "./config.js";
+import { loadConfig, resolveOptions, resolveRole } from "./config.js";
 
 const config = loadConfig();
 const engine = createTTSEngine({
@@ -16,7 +16,7 @@ const voiceQueue = new VoiceQueue(engine, 2, config.notificationSound);
 
 const server = new McpServer({
   name: "agent-voice",
-  version: "1.0.6",
+  version: "1.1.0",
 });
 
 server.registerTool(
@@ -37,11 +37,16 @@ server.registerTool(
         .optional()
         .describe("播报情感类型，不传则使用配置文件默认值（neutral为无情感）"),
       emotionIntensity: z.number().min(0).max(1).optional().describe("情感强度，范围0-1，默认1.0"),
+      role: z
+        .string()
+        .optional()
+        .describe("指定播报角色名称或目标Agent名称（如'Trae'、'Claude'），未指定时使用配置的第一个角色"),
     },
   },
-  async ({ text, voice, rate, volume, scene, emotion, emotionIntensity }) => {
-    const resolved = resolveOptions(config, scene, { voice, rate, volume, emotion, emotionIntensity });
-    voiceQueue.enqueue(text, resolved);
+  async ({ text, voice, rate, volume, scene, emotion, emotionIntensity, role: roleParam }) => {
+    const role = resolveRole(config.roles, roleParam);
+    const resolved = resolveOptions(config, scene, { voice, rate, volume, emotion, emotionIntensity }, role);
+    voiceQueue.enqueue(text, resolved, role?.notificationSound);
     return {
       content: [{ type: "text", text: `OK: queued "${text.slice(0, 50)}${text.length > 50 ? "..." : ""}"` }],
     };
