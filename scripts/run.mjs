@@ -1,4 +1,4 @@
-import { spawn, execSync } from "child_process";
+import { spawn, execFileSync } from "child_process";
 import { existsSync } from "fs";
 import path from "path";
 
@@ -13,18 +13,12 @@ function resolveNode() {
   const nvmSh = path.join(home, ".nvm/nvm.sh");
 
   if (existsSync(nvmSh)) {
-    const shellCmd = [
-      ".", nvmSh, "&&",
-      'export NVM_DIR="${NVM_DIR:-' + home + '/.nvm}"',
-      "&&", "nvm", "use",
-      ">", "/dev/null", "2>&1",
-      "&&", "command", "-v", "node",
-    ].join(" ");
+    const shell = process.env.SHELL || "bash";
+    const script = `. ${nvmSh} && nvm use >/dev/null 2>&1 && command -v node`;
 
     try {
-      const resolved = execSync(shellCmd, {
+      const resolved = execFileSync(shell, ["-c", script], {
         encoding: "utf-8",
-        shell: process.env.SHELL || "bash",
         timeout: 5000,
       }).trim();
       if (resolved && existsSync(resolved)) {
