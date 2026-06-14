@@ -263,4 +263,54 @@ describe("Roles — 多角色支持 (v1.1.0)", () => {
       assert.strictEqual(opts2.voice, "Sinji");
     });
   });
+
+  describe("get_roles 工具数据映射", () => {
+    it("roles 配置正确映射为对外暴露的字段 (name/target/voice)", () => {
+      const roles: import("../dist/config.js").RoleConfig[] = [
+        { name: "助手", voice: "Tingting", target: "给Trae使用", rate: 220, emotion: "calm" },
+        { name: "用户", voice: "Sinji", target: "给Claude使用" },
+        { name: "系统", voice: "Alex" },
+      ];
+
+      // 模拟 get_roles 工具的返回逻辑
+      const mapped = roles.map((r) => ({
+        name: r.name,
+        target: r.target ?? null,
+        voice: r.voice ?? null,
+      }));
+
+      assert.deepStrictEqual(mapped, [
+        { name: "助手", target: "给Trae使用", voice: "Tingting" },
+        { name: "用户", target: "给Claude使用", voice: "Sinji" },
+        { name: "系统", target: null, voice: "Alex" },
+      ]);
+    });
+
+    it("无 roles 配置时返回空数组", () => {
+      const roles: import("../dist/config.js").RoleConfig[] | undefined = undefined;
+      const mapped = (roles ?? [] as import("../dist/config.js").RoleConfig[]).map((r) => ({
+        name: r.name,
+        target: r.target ?? null,
+        voice: r.voice ?? null,
+      }));
+
+      assert.deepStrictEqual(mapped, []);
+    });
+
+    it("角色无 voice 时返回 null", () => {
+      const roles: import("../dist/config.js").RoleConfig[] = [
+        { name: "默认角色" },
+      ];
+
+      const mapped = roles.map((r) => ({
+        name: r.name,
+        target: r.target ?? null,
+        voice: r.voice ?? null,
+      }));
+
+      assert.deepStrictEqual(mapped, [
+        { name: "默认角色", target: null, voice: null },
+      ]);
+    });
+  });
 });

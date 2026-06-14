@@ -57,8 +57,10 @@ mcp__agent-voice__speak(text="需要你的确认：<问题简述>", scene="need_
 
 ## 角色参数（v1.1.0）
 
-如果配置文件配置了多角色，可通过 `role` 参数指定要使用的角色：
+如果配置文件配置了多角色，可通过 `role` 参数指定要使用的角色。**建议在任务开始时先调用 `get_roles` 查询可用角色列表**，再根据角色的 `target` 描述（如"给Trae使用"）选择匹配的角色。
+
 ```
+mcp__agent-voice__get_roles()                       // 查询可用角色
 mcp__agent-voice__speak(text="...", scene="task_start", role="Trae")
 ```
 

@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - 角色匹配规则：精确匹配 name → 模糊匹配 target → 回退到第一个角色
 - 角色级提示音：每个角色可独立配置 `notificationSound`
 - 角色级场景配置：角色场景配置优先级高于全局场景配置
+- `get_roles` 工具：Agent 可动态查询当前配置中的可用角色列表（name/target/voice），无需依赖静态文档
 
 ## [1.0.6] - 2026-06-10
 

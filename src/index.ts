@@ -40,7 +40,7 @@ server.registerTool(
       role: z
         .string()
         .optional()
-        .describe("指定播报角色名称或目标Agent名称（如'Trae'、'Claude'），未指定时使用配置的第一个角色"),
+        .describe("指定播报角色名称或目标Agent名称（如'Trae'、'Claude'）。可用角色参见 get_roles 工具返回的列表。未指定时使用配置的第一个角色"),
     },
   },
   async ({ text, voice, rate, volume, scene, emotion, emotionIntensity, role: roleParam }) => {
@@ -77,6 +77,24 @@ server.registerTool(
     const voices = await engine.getVoices();
     return {
       content: [{ type: "text", text: JSON.stringify(voices, null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
+  "get_roles",
+  {
+    description: "获取当前配置中所有可用的播报角色列表（v1.1.0）。返回每个角色的 name、target（适用范围说明）、voice 信息，Agent 据此决定 speak 时传入哪个 role 参数。无角色配置时返回空数组。",
+    inputSchema: {},
+  },
+  async () => {
+    const roles = (config.roles ?? []).map((r) => ({
+      name: r.name,
+      target: r.target ?? null,
+      voice: r.voice ?? null,
+    }));
+    return {
+      content: [{ type: "text", text: JSON.stringify(roles, null, 2) }],
     };
   }
 );
