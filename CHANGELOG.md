@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-06-25
+
+### Changed
+- 启动 MCP 服务时通过 VoiceQueue 入队播报，自动附带提示音（此前直接调用引擎，绕过提示音）
+- 精简 speak 和 stop 工具回调返回值，仅返回 "OK"，减少 Agent Token 消耗
+- 参数容错优化：scene/emotion 非法值自动回退首个枚举值；rate/volume 超范围自动钳制到合法区间
+
 ## [1.1.0] - 2026-06-13
 
 ### Added

@@ -16,8 +16,11 @@ const voiceQueue = new VoiceQueue(engine, 2, config.notificationSound);
 
 const server = new McpServer({
   name: "agent-voice",
-  version: "1.1.0",
+  version: "1.2.0",
 });
+
+const VALID_SCENES = ["task_start", "task_complete", "task_error", "need_interaction", "milestone"] as const;
+const VALID_EMOTIONS = ["neutral", "happy", "sad", "angry", "calm", "excited"] as const;
 
 server.registerTool(
   "speak",
@@ -26,16 +29,16 @@ server.registerTool(
     inputSchema: {
       text: z.string().describe("要播报的文本内容"),
       voice: z.string().optional().describe("TTS音色名称，不传则使用配置文件默认音色"),
-      rate: z.number().min(50).max(300).optional().describe("语速，范围50-300词/分钟，不传则使用配置文件默认值"),
-      volume: z.number().min(0).max(1).optional().describe("音量，范围0-1，不传则使用配置文件默认值"),
+      rate: z.number().optional().describe("语速，范围50-300词/分钟，不传则使用配置文件默认值，超范围自动钳制"),
+      volume: z.number().optional().describe("音量，范围0-1，不传则使用配置文件默认值，超范围自动钳制"),
       scene: z
-        .enum(["task_start", "task_complete", "task_error", "need_interaction", "milestone"])
+        .string()
         .optional()
-        .describe("播报场景类型，传入后自动应用该场景在配置中的音色/语速/音量"),
+        .describe("播报场景类型，传入后自动应用该场景在配置中的音色/语速/音量。非法值回退为 task_start"),
       emotion: z
-        .enum(["neutral", "happy", "sad", "angry", "calm", "excited"])
+        .string()
         .optional()
-        .describe("播报情感类型，不传则使用配置文件默认值（neutral为无情感）"),
+        .describe("播报情感类型，不传则使用配置文件默认值。非法值回退为 neutral"),
       emotionIntensity: z.number().min(0).max(1).optional().describe("情感强度，范围0-1，默认1.0"),
       role: z
         .string()
@@ -44,11 +47,27 @@ server.registerTool(
     },
   },
   async ({ text, voice, rate, volume, scene, emotion, emotionIntensity, role: roleParam }) => {
+    // 参数容错：非法值使用默认/首个枚举
+    const safeScene = (scene && VALID_SCENES.includes(scene as typeof VALID_SCENES[number]))
+      ? (scene as typeof VALID_SCENES[number])
+      : (scene ? VALID_SCENES[0] : undefined);
+    const safeEmotion = (emotion && VALID_EMOTIONS.includes(emotion as typeof VALID_EMOTIONS[number]))
+      ? (emotion as typeof VALID_EMOTIONS[number])
+      : (emotion ? VALID_EMOTIONS[0] : undefined);
+    const safeRate = rate !== undefined ? Math.max(50, Math.min(300, rate)) : undefined;
+    const safeVolume = volume !== undefined ? Math.max(0, Math.min(1, volume)) : undefined;
+
     const role = resolveRole(config.roles, roleParam);
-    const resolved = resolveOptions(config, scene, { voice, rate, volume, emotion, emotionIntensity }, role);
+    const resolved = resolveOptions(config, safeScene, {
+      voice,
+      rate: safeRate,
+      volume: safeVolume,
+      emotion: safeEmotion,
+      emotionIntensity,
+    }, role);
     voiceQueue.enqueue(text, resolved, role?.notificationSound);
     return {
-      content: [{ type: "text", text: `OK: queued "${text.slice(0, 50)}${text.length > 50 ? "..." : ""}"` }],
+      content: [{ type: "text", text: "OK" }],
     };
   }
 );
@@ -62,7 +81,7 @@ server.registerTool(
   async () => {
     voiceQueue.stop();
     return {
-      content: [{ type: "text", text: "OK: voice stopped and queue cleared" }],
+      content: [{ type: "text", text: "OK" }],
     };
   }
 );
@@ -104,9 +123,7 @@ async function main() {
   await server.connect(transport);
 
   const resolved = resolveOptions(config);
-  engine.speak("agent-voice 服务已启动", resolved).catch((err) => {
-    console.error("Startup announcement failed:", err instanceof Error ? err.message : err);
-  });
+  voiceQueue.enqueue("agent-voice 服务已启动", resolved);
 }
 
 main().catch((error) => {
